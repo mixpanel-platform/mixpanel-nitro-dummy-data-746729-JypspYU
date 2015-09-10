@@ -56,56 +56,67 @@
     </style>
     <script>
       var dateSelect = $('#dateSelect').MPDatepicker();
-      var dates = dateSelect.val();
+      var initialDates = dateSelect.val();
+      var logInAverage = $('#logInAverage').MPChart({'chartType': 'line'});
+      var planType = $('#planType').MPChart({chartType: 'line'});
 
-      function funnelQuery(div) {
-        var promises = [];
-        var signUp = new Promise(function(resolve,reject) {
-          MP.api.funnel('Sign Up', 'Doc Upload', 'Workflow Created').done(function(results) {
-            resolve(results);
-          });
-        });
-        var logIn = new Promise(function(resolve,reject) {
-          MP.api.funnel('Log In', 'Doc Upload', 'Workflow Created').done(function(results) {
-            resolve(results);
-          });
-        });
-        
-        promises.push(signUp);
-        promises.push(logIn); 
-        Promise.all(promises).then(function(data) {
-          var funnelData = {};
-          
-          console.log(data);
-          
-          $.each(data, function(funnelType) {
-            var type = funnelType == 0 ? 'Sign Up' : 'Log In';
-            $.each(data[funnelType], function(event) {
-              if (event != 0) {
-                funnelData[type] = {}
-                var eventName = ''
-                $.each(data[funnelType][event], function(date) {
-                  funnelData[type][date] = data[funnelType][event][date]['overall_conv_ratio'];
-                  eventName = data[funnelType][event][date]['event']
-                });
-                if (type == 'Log In') {
-                  $('<h2 class"title"></h2>').appendTo(div).text('Conversion Rate from Sign Up/Log In to '+eventName);
-                  $('<div class="report"></div>').appendTo(div).MPChart({chartType: 'line', data: funnelData});
-                }
-              }
+      function runQuery(dates) {
+        $('.funnels').html('');
+        function funnelQuery(div) {
+          var promises = [];
+          var signUp = new Promise(function(resolve,reject) {
+            MP.api.funnel('Sign Up', 'Doc Upload', 'Workflow Created', {from: dates.from, to:dates.to}).done(function(results) {
+              resolve(results);
             });
           });
+          var logIn = new Promise(function(resolve,reject) {
+            MP.api.funnel('Log In', 'Doc Upload', 'Workflow Created', {from:dates.from, to:dates.to}).done(function(results) {
+              resolve(results);
+            });
+          });
+          
+          promises.push(signUp);
+          promises.push(logIn); 
+          Promise.all(promises).then(function(data) {
+            var funnelData = {};
+            
+            console.log(data);
+            
+            $.each(data, function(funnelType) {
+              var type = funnelType == 0 ? 'Sign Up' : 'Log In';
+              $.each(data[funnelType], function(event) {
+                if (event != 0) {
+                  funnelData[type] = {}
+                  var eventName = ''
+                  $.each(data[funnelType][event], function(date) {
+                    funnelData[type][date] = data[funnelType][event][date]['overall_conv_ratio'];
+                    eventName = data[funnelType][event][date]['event']
+                  });
+                  if (type == 'Log In') {
+                    $('<h2 class"title"></h2>').appendTo(div).text('Conversion Rate from Sign Up/Log In to '+eventName);
+                    $('<div class="report"></div>').appendTo(div).MPChart({chartType: 'line', data: funnelData});
+                  }
+                }
+              });
+            });
+          });
+        }
+        
+        funnelQuery($('.funnels'));
+  
+        MP.api.query('/api/2.0/segmentation/average', {event: 'Doc Upload', on: 'number(properties["Total Logins"])', where: 'number(properties["Total Doc Uplaods"]) == 1', from: dates.from, to: dates.to}).done(function(results) {
+          logInAverage.MPChart('setData', {'Average Logins': results.results});
+        });
+        
+        MP.api.segment('Workflow Created', 'Plan Type', {from: dates.from, to:dates.to}).done(function(results) {
+          planType.MPChart('setData', results.values());
         });
       }
       
-      funnelQuery($('.funnels'));
-
-      MP.api.query('/api/2.0/segmentation/average', {event: 'Doc Upload', on: 'number(properties["Total Logins"])', where: 'number(properties["Total Doc Uplaods"]) == 1', from: dates.from, to: dates.to}).done(function(results) {
-        $('#logInAverage').MPChart({'chartType': 'line', 'data': {'Average Logins': results.results}});
-      });
+      runQuery(initialDates);
       
-      MP.api.segment('Workflow Created', 'Plan Type').done(function(results) {
-        $('#planType').MPChart({chartType: 'line', data: results.values()});
+      dateSelect.on('change', function(e, newDates) {
+        runQuery(newDates);
       });
     
     </script>
