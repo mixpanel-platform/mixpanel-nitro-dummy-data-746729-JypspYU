@@ -7,31 +7,51 @@
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
   </head>
   <body class="mixpanel-platform-body">
-    <h1>Nitro Product Manager Report</h1>
-    <div id="dateSelect"></div>
-    <div class="funnels"></div>
-    <div class="seg">
-      <h2 class="title">Average Logins before First Doc Upload</h2>
-      <div id="logInAverage" class="report"></div>
-      <h2 class="title">Workflows Created by Plan Type</h2>
-      <div id="planType" class="report"></div>
+    <div class="header">
+      <h1>Nitro Product Manager Report: Workflow Optimization</h1>
+      <div id="dateSelect"></div>
+    </div>
+    <div class="mixpanel-platform-section">
+      <h3>Workflow Conversions</h3>
+      <div class="funnels"></div>
+    </div>
+    <div class="mixpanel-platform-section">
+      <h3>Workflow Breakdowns</h3>
+      <div class="seg">
+        <h2 class="title">Average Logins before First Doc Upload</h2>
+        <div id="logInAverage" class="report"></div>
+        <h2 class="title">Workflows Created by Plan Type</h2>
+        <div id="planType" class="report"></div>
+      </div>
     </div>
     <style>
       body {
-        color: rbg(95,105,131);
+        color: rgb(95,105,131);
       }
       h1 {
         font-size: 20px;
+        display: inline-block;
       }
       h2 {
         font-size: 14px;
         margin: 15px 0;
+        font-weight: normal;
+      }
+      h3 {
+        font-size: 17px;
+        margin: 0 0 15px 0;
       }
       .report {
         margin-bottom: 20px;
       }
       #dateSelect {
         float: right;
+        margin: 0 0 30px 0;
+        top: 0;
+        display: inline-block;
+      }
+      .header {
+        margin-bottom: 30px;
       }
     </style>
     <script>
